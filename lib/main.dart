@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:restart_app/restart_app.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
 
 void main() {
@@ -86,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text("Ajay Dev"),
+        title: Text("Ajay Dv"),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -108,12 +109,15 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              ' sdff You have pushed the button this many times:',
+              ' sdff dfg You have pushed the button this many times:',
             ),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+            TextButton(onPressed: (){
+              Restart.restartApp();
+            }, child:const Text("Tap to restart"))
           ],
         ),
       ),
