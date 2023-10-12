@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:restart_app/restart_app.dart';
+// import 'package:restart_app/restart_app.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
 
 void main() {
@@ -116,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             TextButton(onPressed: (){
-              Restart.restartApp();
+              // Restart.restartApp();
             }, child:const Text("Tap to restart"))
           ],
         ),
