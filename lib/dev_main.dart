@@ -1,4 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:in_app_update/in_app_update.dart';
+import 'package:shorebird/UpdateScreen.dart';
 
 
 import 'package:shorebird_code_push/shorebird_code_push.dart';
@@ -41,6 +45,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+
   void _incrementCounter() async{
 
     final shorebirdCodePush = ShorebirdCodePush();
@@ -57,6 +62,56 @@ class _MyHomePageState extends State<MyHomePage> {
       _counter++;
     });
   }
+
+
+  @override
+  void initState() {
+
+
+
+    // TODO: implement initState
+    super.initState();
+
+    checkForUpdate();
+  }
+
+Future<void> checkForUpdate()async{
+ InAppUpdate.checkForUpdate().then((value) {
+     log(value.updateAvailability.toString());
+     if(value.updateAvailability==UpdateAvailability.updateAvailable){
+
+       InAppUpdate.performImmediateUpdate().then((value) {
+         log("Ye hai answer:"+value.name.toString());
+         if(value==AppUpdateResult.userDeniedUpdate){
+         Navigator.of(context).push(MaterialPageRoute(builder: (context)=>UpdateScreen()));
+         }
+         else if(value==AppUpdateResult.success){
+           showDialog(context: context, builder: (context){
+             return AlertDialog(
+               title: Text("Hurray! 🎉"),
+             );
+           });
+         }
+       }).catchError((e){
+         log("Update Error:"+e.toString());
+       });
+     }
+
+
+
+   }).catchError((onError){
+     log(onError.toString());
+ });
+
+
+    if(InAppUpdate.checkForUpdate()==UpdateAvailability.updateAvailable){
+   await   InAppUpdate.performImmediateUpdate().catchError((e){
+        log(e.toString());
+      });
+    }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
