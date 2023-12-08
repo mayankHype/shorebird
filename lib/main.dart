@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shorebird/feature/location/location_service.dart';
 
 import 'package:shorebird_code_push/shorebird_code_push.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  LocationService().getLocation();
+  // LocationService().getDecodedAddress();
   runApp(const MyApp());
 }
 

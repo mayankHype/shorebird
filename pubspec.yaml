@@ -37,6 +37,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   shorebird_code_push: ^1.1.2
   in_app_update: ^4.2.2
+  location: ^5.0.3
+  flutter_geocoder: ^0.2.2-nullsafety
+  shared_preferences: 
+  url_launcher: ^6.2.1
 #  restart_app: ^1.2.1
 
 dev_dependencies:
