@@ -2,6 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:shorebird/feature/location/location_service.dart';
 import 'package:shorebird/sandbox/listview/widget/bottomBar.dart';
 import 'package:shorebird/sandbox/util/SharedPrefrence.dart';
@@ -45,6 +47,7 @@ class _GridViewTestState extends State<GridViewTest> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+
         centerTitle: false,
         title: SharedStorage.instance.city==null?Text("Select",
           style: Styles.appHeader,
@@ -103,7 +106,7 @@ class _GridViewTestState extends State<GridViewTest> {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
+        child: SharedStorage.instance.city==null?Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
 
           children: [
@@ -182,6 +185,272 @@ class _GridViewTestState extends State<GridViewTest> {
             //   onCityChange: _handleCityChange,
             // ),
 
+          ],
+        ):Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+
+         SizedBox(height: 20,),
+            Text("SERVICES",
+style: Styles.appHeader.copyWith(
+  fontWeight: FontWeight.w600,
+  fontSize: 25
+),
+            ),
+SizedBox(height: 20,),
+
+            // Container(
+            //
+            //     width: MediaQuery.sizeOf(context).width,
+            //     height: MediaQuery.sizeOf(context).height * .2,
+            //     decoration: BoxDecoration(
+            //         borderRadius: BorderRadius.circular(10),
+            //         border: Border.all(
+            //             color: Colors.black
+            //         )
+            //       // gradient: LinearGradient(
+            //       //   begin:Alignment.bottomLeft ,
+            //       //   end: Alignment.bottomRight,
+            //       //   colors: [
+            //       //     Colors.black.withOpacity(0.7),
+            //       //     Colors.transparent
+            //       //   ]
+            //       // )
+            //     ),
+            //     child: Padding(
+            //       padding: const EdgeInsets.all(8.0),
+            //       child: Center(
+            //         child: ListTile(
+            //           title: Text("Book Ride".toUpperCase(),
+            //             style: Styles.appHeader.copyWith(
+            //                 color: Colors.black
+            //             ),
+            //
+            //           ),
+            //           trailing: Image.network("https://infinitecab.com/wp-content/themes/cab/images/taxi-app-png.png"),
+            //           subtitle: Text("Book ride in ${SharedStorage.instance!.city.toString()}".toUpperCase(),
+            //             style: Styles.baseBody.copyWith(
+            //                 color: Colors.black
+            //             ),
+            //
+            //           ),
+            //
+            //         ),
+            //       ),
+            //     )
+            //
+            //
+            // ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Stack(
+                children: [
+
+                  Container(
+
+                    width: MediaQuery.sizeOf(context).width,
+                    height: MediaQuery.sizeOf(context).height * .2,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+
+                      image: DecorationImage(
+                        // filterQuality: FilterQuality.high,
+                        // colorFilter: ColorFilter.mode(Colors.grey.withOpacity(0.5), BlendMode.screen),
+                        fit: BoxFit.cover,
+                        image: Image.network(
+                          'https://media.istockphoto.com/id/1200908341/nl/vector/road-4.jpg?s=170667a&w=0&k=20&c=wGLNMmn5Yo0vLRu-M1nU8FA9FJNKcTOcXsryptE5S0g=',
+                        ).image,
+                      ),
+                    ),
+                  ),
+                  Container(
+
+                    width: MediaQuery.sizeOf(context).width,
+                    height: MediaQuery.sizeOf(context).height * .2,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+
+                     gradient: LinearGradient(
+                       begin:Alignment.bottomLeft ,
+                       end: Alignment.bottomRight,
+
+// stops: [
+//   0.12,
+// 0.70
+// ],
+                       colors: [
+
+
+                         Colors.black.withOpacity(0.67),
+                         Colors.black.withOpacity(0.5),
+                         // Colors.black.withOpacity(0.2),
+                         Colors.transparent,
+                       ]
+                     )
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: ListTile(
+                          title: Text("Book Ride".toUpperCase(),
+                              style: Styles.appHeader.copyWith(
+                                  color: Colors.white
+                              ),
+
+                        ),
+                        trailing: Container(
+                          height: 40,
+                          width: 40,
+                          child: SvgPicture.asset(
+                             'assets/taxi.svg'
+                          ),
+                        ),
+                        subtitle: Text("Book ride in ${SharedStorage.instance!.city.toString()}".toUpperCase(),
+                            style: Styles.baseBody.copyWith(
+                              color: Colors.white
+                            ),
+
+                        ),
+
+                                            ),
+                      ),
+                  )
+
+
+              ),
+                ])
+            ),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Stack(
+                    children: [
+
+                      Container(
+
+                        width: MediaQuery.sizeOf(context).width,
+                        height: MediaQuery.sizeOf(context).height * .2,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+
+                          image: DecorationImage(
+                            // filterQuality: FilterQuality.high,
+                            // colorFilter: ColorFilter.mode(Colors.grey.withOpacity(0.5), BlendMode.screen),
+                            fit: BoxFit.cover,
+                            image: Image.network(
+                              'https://media.istockphoto.com/id/1200908341/nl/vector/road-4.jpg?s=170667a&w=0&k=20&c=wGLNMmn5Yo0vLRu-M1nU8FA9FJNKcTOcXsryptE5S0g=',
+                            ).image,
+                          ),
+                        ),
+                      ),
+                      Container(
+
+                          width: MediaQuery.sizeOf(context).width,
+                          height: MediaQuery.sizeOf(context).height * .2,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+
+                              gradient: LinearGradient(
+                                  begin:Alignment.bottomLeft ,
+                                  end: Alignment.bottomRight,
+
+                                  colors: [
+
+
+                                    Colors.black45,
+                                    Colors.black45,
+                                    Colors.transparent,
+                                  ]
+                              )
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                              child: ListTile(
+                                onTap: (){
+                                  showModalBottomSheet(context: context, builder:(context){
+                                    return Container(
+                                height: MediaQuery.of(context).size.height*0.50,
+                                      width: double.infinity,
+                                      child: InkWell(
+
+                                          onTap: ()async{
+                                            List<DateTime>? dateTimeList =
+                                                await showOmniDateTimeRangePicker(
+                                              context: context,
+                                              startInitialDate: DateTime.now(),
+                                              startFirstDate:
+                                              DateTime(1600).subtract(const Duration(days: 3652)),
+                                              startLastDate: DateTime.now().add(
+                                                const Duration(days: 3652),
+                                              ),
+                                              endInitialDate: DateTime.now(),
+                                              endFirstDate:
+                                              DateTime(1600).subtract(const Duration(days: 3652)),
+                                              endLastDate: DateTime.now().add(
+                                                const Duration(days: 3652),
+                                              ),
+                                              is24HourMode: false,
+                                              isShowSeconds: false,
+                                              minutesInterval: 1,
+                                              secondsInterval: 1,
+                                              borderRadius: const BorderRadius.all(Radius.circular(16)),
+                                              constraints: const BoxConstraints(
+                                                maxWidth: 350,
+                                                maxHeight: 650,
+                                              ),
+                                              transitionBuilder: (context, anim1, anim2, child) {
+                                                return FadeTransition(
+                                                  opacity: anim1.drive(
+                                                    Tween(
+                                                      begin: 0,
+                                                      end: 1,
+                                                    ),
+                                                  ),
+                                                  child: child,
+                                                );
+                                              },
+                                              transitionDuration: const Duration(milliseconds: 200),
+                                              barrierDismissible: true,
+                                              selectableDayPredicate: (dateTime) {
+                                                // Disable 25th Feb 2023
+                                                if (dateTime == DateTime(2023, 2, 25)) {
+                                                  return false;
+                                                } else {
+                                                  return true;
+                                                }
+                                              },
+                                            );
+                                            log(dateTimeList.toString());
+                                          },
+                                          child: Text("Choose Time and Date")),
+                                    );
+                                  });
+                                },
+                                title: Text("Rent Bike".toUpperCase(),
+                                  style: Styles.appHeader.copyWith(
+                                      color: Colors.white
+                                  ),
+
+                                ),
+                                trailing: Image.network("https://infinitecab.com/wp-content/themes/cab/images/taxi-app-png.png"),
+                                subtitle: Text("Book ride in ${SharedStorage.instance!.city.toString()}".toUpperCase(),
+                                  style: Styles.baseBody.copyWith(
+                                      color: Colors.white
+                                  ),
+
+                                ),
+
+                              ),
+                            ),
+                          )
+
+
+                      ),
+                    ])
+            ),
+
+            Expanded(child: SizedBox()),
           ],
         ),
       ),
