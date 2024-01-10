@@ -7,6 +7,7 @@ import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:shorebird/feature/location/location_service.dart';
 import 'package:shorebird/sandbox/listview/widget/bottomBar.dart';
 import 'package:shorebird/sandbox/util/SharedPrefrence.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
@@ -21,22 +22,52 @@ class GridViewTest extends StatefulWidget {
 }
 
 class _GridViewTestState extends State<GridViewTest> {
-  List<City>? _cityList;
-  City? _currentCity;
 
+
+  bool isSameDate(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
+  }
+  List<String> generateTimeSlots(DateTime selectedDate,bool pick) {
+    List<String> timeSlots = [];
+    DateTime currentTime = selectedDate ;
+    bool pickUpSame=isSameDate(selectedDate,DateTime.now());
+    print(pickUpSame);
+
+    currentTime=pickUpSame==true?DateTime.now():DateTime(currentTime.year, currentTime.month, currentTime.day, 7, 30);
+
+    // Generate time slots until 8:00 PM if pickup and drop dates are the same
+    // or until 8:00 PM from 8:00 AM for different pickup and drop dates
+    DateTime endTime =DateTime(currentTime.year, currentTime.month, currentTime.day, 20, 30);
+
+    // Round up to the nearest 30-minute interval
+    int minutesToAdd =pick==true? 30-(currentTime.minute % 30):60-(currentTime.minute % 30) ;
+
+
+
+    DateTime roundedTime =currentTime.add(Duration(minutes: minutesToAdd));
+
+    // Generate time slots
+    while (roundedTime.isBefore(endTime)) {
+      String formattedTime = "${roundedTime.hour}:${roundedTime.minute.toString().padLeft(2, '0')}";
+      timeSlots.add(formattedTime);
+
+      // Move to the next 30-minute interval
+      roundedTime = roundedTime.add(Duration(minutes: 30));
+    }
+
+    return timeSlots;
+  }
   @override
   void initState() {
     super.initState();
-    var data = DemoData();
-    _cityList = data.getCities();
-    _currentCity = _cityList![1];
+
+
   }
 
-  void _handleCityChange(City city) {
-    setState(() {
-      this._currentCity = city;
-    });
-  }
+
+
   List<IconData> icons=[
     Icons.home,
     Icons.search,
@@ -46,417 +77,350 @@ class _GridViewTestState extends State<GridViewTest> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-
-        centerTitle: false,
-        title: SharedStorage.instance.city==null?Text("Select",
-          style: Styles.appHeader,
-        ):Row(
-          children: [
-            Text(SharedStorage.instance!.city.toString(),
-              style: Styles.appHeader.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600
-              ),
-
-            ),
-            RotatedBox(quarterTurns:1,child: Icon(Icons.chevron_right),)
-          ],
-        ),
-
-        actions: [
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                  onPressed: ()async{
-
-       var loc=SharedStorage.instance.location;
-       var latitude=loc!.split('+')[0];
-       var longitude=loc!.split('+')[1];
-              String origin = '${loc!.split('+')[0]},${loc!.split('+')[1]}';
-              String destination = '${double.tryParse(latitude)! + 0.002},${double.tryParse(longitude)! - 0.002}';
 
 
+body: Column(
+  children: [
+    SizedBox(
+      height: 50,
+    ),
+    GestureDetector(
+      onTap: (){
+        CalendarFormat _calendarFormat = CalendarFormat.month;
+        RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
+            .toggledOn; // Can be toggled on/off by longpressing a date
+        DateTime _focusedDay = DateTime.now();
+        DateTime? _selectedDay;
+        DateTime? _rangeStart;
+        DateTime? _rangeEnd;
+        List<String>? _pickTime;
+        List<String>? _endTime;
+        String pick="Select";
+        String drop="Select";
 
-              final Uri _url = Uri.parse('https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$destination&travelmode=driving&dir_action=navigate');
-
-              await launchUrl(
-                _url,
-                mode: LaunchMode.externalApplication,
-              );
-                  },
-                  icon:Icon(Icons.local_offer_outlined)),
-              SizedBox(width: 5,),
-              Text("Offers",
-                style: Styles.appHeader.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600
-                ),
-
-              ),
-
-            ],
-          ),
-          SizedBox(width: 10,),
-        ],
-      ),
-
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SharedStorage.instance.city==null?Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-
-          children: [
-
-            Text(
-              'Choose your city',
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.start,
-              style: Styles.appHeader,
-              maxLines: 2,
-            ),
-            Expanded(child: GridView.builder(
-                itemCount: _cityList!.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  childAspectRatio: 16/13
-
-                ),
-                itemBuilder: (context,i){
-                  final data=_cityList![i];
-                  return GestureDetector(
-                    onTap: (){
-                      SharedStorage.instance.saveCity(data.name);
-                    },
-                    child: Container(
-                    height: 50,
-                      decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-
-                        image: DecorationImage(
-                            fit: BoxFit.fill,
-
-                            image: NetworkImage(data.description))
+        String? _selectedOption="Multiday";
+        showModalBottomSheet(
+            backgroundColor: Colors.white,
+            isScrollControlled: true,
+            context: context,
+            builder: (context) {
+              return Container(
+                height: MediaQuery.of(context).size.height - 30,
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 10,
+                    ),
+                    AppBar(
+                      leading: IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          size: 22,
+                        ),
+                        onPressed: () {
+Navigator.of(context).pop();
+                        },
                       ),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      centerTitle: true,
+                      title: Text(
+                        " Date",
+                        style: Styles.appHeader.copyWith(
+                            fontSize:
+                           22,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
 
-                      child: Stack(
+                    Divider(
+                      color: Colors.grey.withOpacity(0.2),
+                      height: 10,
+                    ),
+
+                    // Padding( padding: const EdgeInsets.all(8.0),
+                    // child: Row(
+                    //
+                    //   children: [
+                    //     ChoiceChip(label: Text("Today"), selected: false),
+                    //     SizedBox(
+                    //       width: ScreenInfo.responsiveWidth(10),
+                    //     ),
+                    //     ChoiceChip(label: Text("Days"), selected: false)
+                    //   ],
+                    // ),
+                    // ),
+                    StatefulBuilder(builder: (context, setState) {
+                      return Column(
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
+                          // Row(
+                          //   children: [
+                          //     Padding(
+                          //       padding: const EdgeInsets.all(8.0),
+                          //       child: Text(
+                          //         "Renting period?",
+                          //         style: Styles.appHeader.copyWith(
+                          //             fontWeight: FontWeight.w600,
+                          //
+                          //       ),
+                          //     ),),
+                          //
+                          //   ],
+                          // ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: RadioListTile(
+                                  title: Text('Multiday'),
+                                  value: 'Multiday',
+                                  groupValue: _selectedOption,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedOption = value;
+                                      _rangeSelectionMode=RangeSelectionMode.toggledOn;
 
-                      colors: [
-                        Colors.black,
-
-                        Colors.grey.withOpacity(0.2),
-
-                      ]
-                    )
-                            ),
-                          ),
-                          Align(alignment: Alignment.bottomCenter,
-                          child: Text(data.name,
-
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700
-                          ),
-                          ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }))
-
-            // Image.network("https://i.etsystatic.com/14058895/r/il/99bf9f/1233826558/il_570xN.1233826558_r819.jpg"),
-            //
-            // TravelCardList(
-            //   cities: _cityList,
-            //   onCityChange: _handleCityChange,
-            // ),
-
-          ],
-        ):Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-
-         SizedBox(height: 20,),
-            Text("SERVICES",
-style: Styles.appHeader.copyWith(
-  fontWeight: FontWeight.w600,
-  fontSize: 25
-),
-            ),
-SizedBox(height: 20,),
-
-            // Container(
-            //
-            //     width: MediaQuery.sizeOf(context).width,
-            //     height: MediaQuery.sizeOf(context).height * .2,
-            //     decoration: BoxDecoration(
-            //         borderRadius: BorderRadius.circular(10),
-            //         border: Border.all(
-            //             color: Colors.black
-            //         )
-            //       // gradient: LinearGradient(
-            //       //   begin:Alignment.bottomLeft ,
-            //       //   end: Alignment.bottomRight,
-            //       //   colors: [
-            //       //     Colors.black.withOpacity(0.7),
-            //       //     Colors.transparent
-            //       //   ]
-            //       // )
-            //     ),
-            //     child: Padding(
-            //       padding: const EdgeInsets.all(8.0),
-            //       child: Center(
-            //         child: ListTile(
-            //           title: Text("Book Ride".toUpperCase(),
-            //             style: Styles.appHeader.copyWith(
-            //                 color: Colors.black
-            //             ),
-            //
-            //           ),
-            //           trailing: Image.network("https://infinitecab.com/wp-content/themes/cab/images/taxi-app-png.png"),
-            //           subtitle: Text("Book ride in ${SharedStorage.instance!.city.toString()}".toUpperCase(),
-            //             style: Styles.baseBody.copyWith(
-            //                 color: Colors.black
-            //             ),
-            //
-            //           ),
-            //
-            //         ),
-            //       ),
-            //     )
-            //
-            //
-            // ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Stack(
-                children: [
-
-                  Container(
-
-                    width: MediaQuery.sizeOf(context).width,
-                    height: MediaQuery.sizeOf(context).height * .2,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-
-                      image: DecorationImage(
-                        // filterQuality: FilterQuality.high,
-                        // colorFilter: ColorFilter.mode(Colors.grey.withOpacity(0.5), BlendMode.screen),
-                        fit: BoxFit.cover,
-                        image: Image.network(
-                          'https://media.istockphoto.com/id/1200908341/nl/vector/road-4.jpg?s=170667a&w=0&k=20&c=wGLNMmn5Yo0vLRu-M1nU8FA9FJNKcTOcXsryptE5S0g=',
-                        ).image,
-                      ),
-                    ),
-                  ),
-                  Container(
-
-                    width: MediaQuery.sizeOf(context).width,
-                    height: MediaQuery.sizeOf(context).height * .2,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-
-                     gradient: LinearGradient(
-                       begin:Alignment.bottomLeft ,
-                       end: Alignment.bottomRight,
-
-// stops: [
-//   0.12,
-// 0.70
-// ],
-                       colors: [
-
-
-                         Colors.black.withOpacity(0.67),
-                         Colors.black.withOpacity(0.5),
-                         // Colors.black.withOpacity(0.2),
-                         Colors.transparent,
-                       ]
-                     )
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                        child: ListTile(
-                          title: Text("Book Ride".toUpperCase(),
-                              style: Styles.appHeader.copyWith(
-                                  color: Colors.white
+                                    });
+                                  },
+                                ),
                               ),
+                              Expanded(
+                                child: RadioListTile(
+                                  title: Text('Single day'),
+                                  value: 'Singleday',
+                                  groupValue: _selectedOption,
+                                  onChanged: (value) {
+                                    setState(() {
 
-                        ),
-                        trailing: Container(
-                          height: 40,
-                          width: 40,
-                          child: SvgPicture.asset(
-                             'assets/taxi.svg'
+                                      _rangeStart=null;
+                                      _rangeEnd=null;
+                                      _rangeSelectionMode=RangeSelectionMode.toggledOff;
+                                      _selectedOption=value;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        subtitle: Text("Book ride in ${SharedStorage.instance!.city.toString()}".toUpperCase(),
-                            style: Styles.baseBody.copyWith(
-                              color: Colors.white
-                            ),
-
-                        ),
-
-                                            ),
-                      ),
-                  )
+                       
 
 
-              ),
-                ])
-            ),
-            Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Stack(
-                    children: [
-
-                      Container(
-
-                        width: MediaQuery.sizeOf(context).width,
-                        height: MediaQuery.sizeOf(context).height * .2,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-
-                          image: DecorationImage(
-                            // filterQuality: FilterQuality.high,
-                            // colorFilter: ColorFilter.mode(Colors.grey.withOpacity(0.5), BlendMode.screen),
-                            fit: BoxFit.cover,
-                            image: Image.network(
-                              'https://media.istockphoto.com/id/1200908341/nl/vector/road-4.jpg?s=170667a&w=0&k=20&c=wGLNMmn5Yo0vLRu-M1nU8FA9FJNKcTOcXsryptE5S0g=',
-                            ).image,
-                          ),
-                        ),
-                      ),
-                      Container(
-
-                          width: MediaQuery.sizeOf(context).width,
-                          height: MediaQuery.sizeOf(context).height * .2,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-
-                              gradient: LinearGradient(
-                                  begin:Alignment.bottomLeft ,
-                                  end: Alignment.bottomRight,
-
-                                  colors: [
 
 
-                                    Colors.black45,
-                                    Colors.black45,
-                                    Colors.transparent,
-                                  ]
-                              )
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                              child: ListTile(
-                                onTap: (){
-                                  showModalBottomSheet(context: context, builder:(context){
-                                    return Container(
-                                height: MediaQuery.of(context).size.height*0.50,
-                                      width: double.infinity,
-                                      child: InkWell(
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Container(
+                              // height: ScreenInfo.responsiveHeight(250),
+                              decoration: BoxDecoration(
+                                  borderRadius:
+                                  BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: Colors.grey
+                                          .withOpacity(0.3))),
 
-                                          onTap: ()async{
-                                            List<DateTime>? dateTimeList =
-                                                await showOmniDateTimeRangePicker(
-                                              context: context,
-                                              startInitialDate: DateTime.now(),
-                                              startFirstDate:
-                                              DateTime(1600).subtract(const Duration(days: 3652)),
-                                              startLastDate: DateTime.now().add(
-                                                const Duration(days: 3652),
-                                              ),
-                                              endInitialDate: DateTime.now(),
-                                              endFirstDate:
-                                              DateTime(1600).subtract(const Duration(days: 3652)),
-                                              endLastDate: DateTime.now().add(
-                                                const Duration(days: 3652),
-                                              ),
-                                              is24HourMode: false,
-                                              isShowSeconds: false,
-                                              minutesInterval: 1,
-                                              secondsInterval: 1,
-                                              borderRadius: const BorderRadius.all(Radius.circular(16)),
-                                              constraints: const BoxConstraints(
-                                                maxWidth: 350,
-                                                maxHeight: 650,
-                                              ),
-                                              transitionBuilder: (context, anim1, anim2, child) {
-                                                return FadeTransition(
-                                                  opacity: anim1.drive(
-                                                    Tween(
-                                                      begin: 0,
-                                                      end: 1,
-                                                    ),
-                                                  ),
-                                                  child: child,
-                                                );
-                                              },
-                                              transitionDuration: const Duration(milliseconds: 200),
-                                              barrierDismissible: true,
-                                              selectableDayPredicate: (dateTime) {
-                                                // Disable 25th Feb 2023
-                                                if (dateTime == DateTime(2023, 2, 25)) {
-                                                  return false;
-                                                } else {
-                                                  return true;
-                                                }
-                                              },
-                                            );
-                                            log(dateTimeList.toString());
-                                          },
-                                          child: Text("Choose Time and Date")),
-                                    );
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height:
+
+                                        5,
+                                  ),
+
+                                  /// Checkbox
+
+
+                              TableCalendar(
+                               firstDay: DateTime.now(),
+                                lastDay: DateTime(2024,12,30),
+                                focusedDay: _focusedDay,
+                                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                                rangeStartDay: _rangeStart,
+                                rangeEndDay: _rangeEnd,
+                                calendarFormat: _calendarFormat,
+
+                                rangeSelectionMode: _rangeSelectionMode,
+                                onDaySelected: (selectedDay, focusedDay) {
+
+                                    setState(() {
+                                      _selectedDay = selectedDay;
+                                      _focusedDay = focusedDay;
+                                      _rangeStart = null; // Important to clean those
+                                      _rangeEnd = null;
+                                      _rangeSelectionMode = RangeSelectionMode.toggledOff;
+                                      _pickTime=generateTimeSlots(_selectedDay!,true);
+                                      _pickTime?.insert(0, 'Select');
+                                      _endTime=generateTimeSlots(_selectedDay!, false);
+                                      _endTime?.insert(0, 'Select');
+                                    });
+
+                                },
+                                onRangeSelected: (start, end, focusedDay) {
+                                  setState(() {
+                                    _selectedDay = null;
+                                    _focusedDay = focusedDay;
+                                    _rangeStart = start;
+                                    _rangeEnd = end;
+                                    _rangeSelectionMode = RangeSelectionMode.toggledOn;
+
+                                    _pickTime=generateTimeSlots(_rangeStart!,true);
+                                    _pickTime?.insert(0, 'Select');
+
+                                    _endTime=generateTimeSlots(_rangeEnd!, false);
+                                    _endTime?.insert(0, 'Select');
                                   });
                                 },
-                                title: Text("Rent Bike".toUpperCase(),
-                                  style: Styles.appHeader.copyWith(
-                                      color: Colors.white
-                                  ),
 
-                                ),
-                                trailing: Image.network("https://infinitecab.com/wp-content/themes/cab/images/taxi-app-png.png"),
-                                subtitle: Text("Book ride in ${SharedStorage.instance!.city.toString()}".toUpperCase(),
-                                  style: Styles.baseBody.copyWith(
-                                      color: Colors.white
-                                  ),
+                                onPageChanged: (focusedDay) {
+                                  _focusedDay = focusedDay;
+                                },
+                              ),
 
-                                ),
-
+                                  _rangeStart!=null&&_rangeEnd!=null?  SizedBox(
+                                    height:10,
+                                  ):SizedBox()
+                                ],
                               ),
                             ),
-                          )
+                          ),
 
 
-                      ),
-                    ])
-            ),
+                          if(_selectedOption=="Multiday"&&_rangeStart!=null&&_rangeEnd!=null)
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.black45
+                              )
+                            ),
+                            child: Column(
+                              children: [
+                               ListTile(
+                                 title: Text("PickUp Date"),
+                                 subtitle: Text(_rangeStart!.toUtc().toString()),
+                                 trailing:DropdownButton<String>(
+                                   value: pick,
+                                   items: _pickTime!.map((String value) {
+                                     return DropdownMenuItem<String>(
+                                       value: value,
+                                       child: Text(value),
+                                     );
+                                   }).toList(),
+                                   onChanged: (String? newValue) {
+                                     setState(() {
+                                       pick=newValue!;
+                                       // Handle dropdown value change
+                                     });
+                                   },
+                                 ),
+                               ),
+                                ListTile(
+                                  title: Text("Drop Date"),
+                                  subtitle: Text(_rangeEnd!.toUtc().toString()),
+                                  trailing:DropdownButton<String>(
+                                    value: drop,
+                                    items: _endTime!.map((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        drop=newValue!;
+                                        // Handle dropdown value change
+                                      });
+                                    },
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
 
-            Expanded(child: SizedBox()),
-          ],
-        ),
+                         _selectedOption!.toLowerCase()=="Singleday".toLowerCase()&&_selectedDay!=null?
+                            Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: Colors.black45
+                                  )
+                              ),
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    title: Text("PickUp Time"),
+
+                                    trailing:DropdownButton<String>(
+                                      value: pick,
+                                      items: _pickTime!.map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          pick=newValue!;
+                                          // Handle dropdown value change
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  ListTile(
+                                    title: Text("Drop Time"),
+
+                                    trailing:DropdownButton<String>(
+                                      value: drop,
+                                      items: _endTime!.map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          drop=newValue!;
+                                          // Handle dropdown value change
+                                        });
+                                      },
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ):Container()
+
+                        ],
+                      );
+                    }),
+                    Spacer(),
+
+                  ],
+                ),
+              );
+            });
+      },
+      child: Container(
+        height: 40,
+        color: Colors.red,
       ),
+    ),
+    Expanded(
+      child: CustomPaint(
+      size: Size(double.infinity, 400),
+        painter: RPSCustomPainter(),
+      
+      ),
+    ),
+  ],
+),
+
     );
   }
 }
+
+
+
+
 
 
 
@@ -602,3 +566,56 @@ class DemoData {
   List<City> getCities() => _cities;
   List<Hotel> getHotels(City city) => city.hotels;
 }
+class RPSCustomPainter extends CustomPainter{
+
+  @override
+  void paint(Canvas canvas, Size size) {
+
+
+
+    // Layer 1
+
+    Paint paint_fill_0 = Paint()
+      ..color = const Color.fromARGB(255, 255, 255, 255)
+      ..style = PaintingStyle.fill
+      ..strokeWidth = size.width*0.00
+      ..strokeCap = StrokeCap.butt
+      ..strokeJoin = StrokeJoin.miter;
+
+
+    Path path_0 = Path();
+    path_0.moveTo(size.width*0.4006000,size.height*0.6885937);
+    path_0.lineTo(size.width*0.3995100,size.height*0.8654085);
+    path_0.lineTo(size.width*0.6005100,size.height*0.8642378);
+    path_0.lineTo(size.width*0.6002100,size.height*0.6899038);
+    path_0.quadraticBezierTo(size.width*0.5578000,size.height*0.6431242,size.width*0.4949500,size.height*0.6395844);
+    path_0.quadraticBezierTo(size.width*0.4421300,size.height*0.6430406,size.width*0.4006000,size.height*0.6885937);
+    path_0.close();
+
+    canvas.drawPath(path_0, paint_fill_0);
+
+
+    // Layer 1
+
+    Paint paint_stroke_0 = Paint()
+      ..color = const Color.fromARGB(255, 33, 150, 243)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.width*0.00
+      ..strokeCap = StrokeCap.butt
+      ..strokeJoin = StrokeJoin.miter;
+
+
+
+    canvas.drawPath(path_0, paint_stroke_0);
+
+
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+
+}
+
+

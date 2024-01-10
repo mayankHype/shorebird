@@ -43,6 +43,7 @@ dependencies:
   url_launcher: ^6.2.1
   flutter_svg:
   omni_datetime_picker: ^1.0.9
+  table_calendar: ^3.0.9
 #  restart_app: ^1.2.1
 
 dev_dependencies:
